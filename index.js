@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const objectId = require("mongodb").ObjectId;
+const ObjectId = require("mongodb").ObjectId;
 const MongoUtil = require("./MongoUtil.js");
 const cors = require("cors");
 
@@ -59,6 +59,27 @@ async function main() {
 
   });
 
+  app.get("/products/:id", async (req, res) => {
+    try {
+      let result = await db.collection("main").findOne({
+        _id: ObjectId(req.params.id)
+      });
+      res.status(200);
+      res.send({
+        result,
+        message: `${req.params.id} fetched okay`
+      });
+    }
+    catch (e) {
+      console.log("look here: ", req.params.id)
+      res.status(500);
+      res.send({
+        error: "Internal server error. Please contact site administrator."
+      })
+      console.log(e);
+    }
+  });
+
   app.delete("/products/:id", async (req, res) => {
     try {
       let result = await db.collection("main").remove({
@@ -66,10 +87,48 @@ async function main() {
       });
       res.status(200);
       res.send({
+        result,
         message:"Data deleted okay."
       });
     }
     catch (e) {
+      console.log("look here: ", req.params.id)
+      res.status(500);
+      res.send({
+        error: "Internal server error. Please contact site administrator."
+      })
+      console.log(e);
+    }
+  });
+
+  app.post("/products/:id", async (req, res) => {
+    console.log(req.body);
+    console.log("_id:", req.params.id);
+    let date = new Date(req.body.date) || new Date();
+    let user = req.body.user;
+    let itemName = req.body.itemName;
+    let category = req.body.category;
+    let itemDescription = req.body.itemDescription;
+
+    try {
+      let result = await db.collection("main").updateOne({
+        _id: ObjectId(req.params.id)},
+      {
+        $set:{
+          date: date,
+          user: user,
+          itemName: itemName,
+          category: category,
+          itemDescription: itemDescription
+        }
+      });
+      res.send({
+        result,
+        message:"Data updated okay."
+      });
+    }
+    catch (e) {
+      console.log("look here: ", req.params.id)
       res.status(500);
       res.send({
         error: "Internal server error. Please contact site administrator."
